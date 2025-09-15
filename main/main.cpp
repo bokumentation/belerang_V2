@@ -1,10 +1,10 @@
-#include <stdio.h>
 #include "Arduino.h"
+#include <stdio.h>
 
 // Wifi Library
-#include "esp_wifi.h"
-#include "esp_now.h"
-#include "WiFi.h"
+#include "WiFi.h"     // Unused
+#include "esp_now.h"  // Unused
+#include "esp_wifi.h" // Unused
 
 // User include library
 #include "anemometer.h"
@@ -19,11 +19,9 @@ const static char *pTAG_MAIN = "MAIN";
 HardwareSerial SO2_Serial(SO2_UART_PORT);
 HardwareSerial H2S_Serial(H2S_UART_PORT);
 
-void setup()
-{
+void setup() {
   Serial.begin(115200);
-  while (!Serial)
-  {
+  while (!Serial) {
     ; // wait for serial port to connect
   }
   WiFi.mode(WIFI_STA);
@@ -46,22 +44,25 @@ void setup()
   delay(100);
 }
 
-void loop()
-{
+void loop() {
   anemometer_loop();
   float wind_speed = getAnemometerSpeed_kmph();
   // ESP_LOGI(pTAG_MAIN, "Current wind speed: %.2f km/h", wind_speed);
-  
+
   ESP_LOGI("MAIN LOOP", "--------------------------------------");
   ESP_LOGI("ANEMOMETER", "GET WIND SPEED");
   Serial.println("Wind Speed Response: ");
-  Serial.print(wind_speed); Serial.print(" km/h");
+  Serial.print(wind_speed);
+  Serial.print(" km/h");
   Serial.println(" ");
-  
+
   // Get combined data from the UART sensor
   ESP_LOGI("SO2", "GET DATA");
+
+  // Need to work for get global varible and not to print here.
   tb600b::get_combined_data(SO2_Serial, CMD_GET_COMBINED_DATA, sizeof(CMD_GET_COMBINED_DATA));
 
+  // Need to work for get global varible and not to print here.
   ESP_LOGI("H2S", "GET DATA");
   tb600b::get_combined_data(H2S_Serial, CMD_GET_COMBINED_DATA, sizeof(CMD_GET_COMBINED_DATA));
 
