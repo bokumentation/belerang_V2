@@ -1,0 +1,9 @@
+Diagnostics:
+  UnusedIncludes: None
+
+CompileFlags:
+  CompilationDatabase: build/
+  Remove: [-m*, -f*]
+
+InlayHints:
+  ParameterNames: false
