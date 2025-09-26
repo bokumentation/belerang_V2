@@ -2,7 +2,118 @@
 #include "Arduino.h"
 
 namespace tb600b {
-void get_combined_data(HardwareSerial& uart_port, const uint8_t *command, size_t commandSize) {
+
+// Define global variables
+float so2_currentTemperature = 0.0;
+float so2_currentHumidity = 0.0;
+float so2_currentGasUg = 0.0;
+bool so2_isDataAvailable = false;
+
+float h2s_currentTemperature = 0.0;
+float h2s_currentHumidity = 0.0;
+float h2s_currentGasUg = 0.0;
+bool h2s_isDataAvailable = false;
+
+// SO2: Get Combined Data
+void get_so2_data(HardwareSerial &uart_port, const uint8_t *command, size_t commandSize) {
+  const int responseLength = 13;
+  uint8_t responseData[responseLength];
+
+  Serial.println("SEND_CMD: get combined data from SO2 sensor ---");
+  uart_port.write(command, commandSize);
+
+  int bytesRead = uart_port.readBytes(responseData, responseLength);
+  so2_isDataAvailable = false; // Assume failure until proven otherwise
+
+  if (bytesRead == responseLength) {
+    Serial.println("Received Combined Data Response:");
+    // Arduino doesn't have a direct equivalent of ESP_LOG_BUFFER_HEXDUMP, so we'll print it manually
+    for (int i = 0; i < bytesRead; i++) {
+      if (responseData[i] < 0x10)
+        Serial.print("0");
+      Serial.print(responseData[i], HEX);
+      Serial.print(" ");
+    }
+    Serial.println();
+
+    if (responseData[0] == 0xFF && responseData[1] == 0x87) {
+      
+      so2_isDataAvailable=true;
+
+      int16_t rawTemperature = (int16_t)((responseData[8] << 8) | responseData[9]);
+      float temperature = (float)rawTemperature / 100.0;
+      uint16_t rawHumidity = (uint16_t)((responseData[10] << 8) | responseData[11]);
+      float humidity = (float)rawHumidity / 100.0;
+      uint16_t rawGasUg = (uint16_t)((responseData[2] << 8) | responseData[3]);
+      float gasUg = (float)rawGasUg;
+
+      so2_currentTemperature = temperature;
+      so2_currentHumidity = humidity;
+      so2_currentGasUg = gasUg;
+
+      // Serial.printf("Temperature: %.2f °C\n", temperature);
+      // Serial.printf("Humidity: %.2f %%\n", humidity);
+      // Serial.printf("Gas Concentration: %.2f ug/m^3\n", gasUg);
+    } else {
+      Serial.println("Received malformed response header.");
+    }
+  } else {
+    Serial.println("Failed to receive complete combined data response within timeout.");
+  }
+  delay(100);
+}
+
+// H2S: Get combined data
+void get_h2s_data(HardwareSerial &uart_port, const uint8_t *command, size_t commandSize) {
+  const int responseLength = 13;
+  uint8_t responseData[responseLength];
+
+  Serial.println("SEND_CMD: get combined data from H2S sensor ---");
+  uart_port.write(command, commandSize);
+
+  int bytesRead = uart_port.readBytes(responseData, responseLength);
+  h2s_isDataAvailable = false; // Assume failure until proven otherwise
+
+  if (bytesRead == responseLength) {
+    Serial.println("Received Combined Data Response:");
+    // Arduino doesn't have a direct equivalent of ESP_LOG_BUFFER_HEXDUMP, so we'll print it manually
+    for (int i = 0; i < bytesRead; i++) {
+      if (responseData[i] < 0x10)
+        Serial.print("0");
+      Serial.print(responseData[i], HEX);
+      Serial.print(" ");
+    }
+    Serial.println();
+
+    if (responseData[0] == 0xFF && responseData[1] == 0x87) {
+      
+      h2s_isDataAvailable=true;
+
+      int16_t rawTemperature = (int16_t)((responseData[8] << 8) | responseData[9]);
+      float temperature = (float)rawTemperature / 100.0;
+      uint16_t rawHumidity = (uint16_t)((responseData[10] << 8) | responseData[11]);
+      float humidity = (float)rawHumidity / 100.0;
+      uint16_t rawGasUg = (uint16_t)((responseData[2] << 8) | responseData[3]);
+      float gasUg = (float)rawGasUg;
+
+      h2s_currentTemperature = temperature;
+      h2s_currentHumidity = humidity;
+      h2s_currentGasUg = gasUg;
+
+      // Serial.printf("Temperature: %.2f °C\n", temperature);
+      // Serial.printf("Humidity: %.2f %%\n", humidity);
+      // Serial.printf("Gas Concentration: %.2f ug/m^3\n", gasUg);
+    } else {
+      Serial.println("Received malformed response header.");
+    }
+  } else {
+    Serial.println("Failed to receive complete combined data response within timeout.");
+  }
+  delay(100);
+}
+
+/// OLD CODE ///
+void get_combined_data(HardwareSerial &uart_port, const uint8_t *command, size_t commandSize) {
   const int responseLength = 13;
   uint8_t responseData[responseLength];
 
@@ -15,7 +126,8 @@ void get_combined_data(HardwareSerial& uart_port, const uint8_t *command, size_t
     Serial.println("Received Combined Data Response:");
     // Arduino doesn't have a direct equivalent of ESP_LOG_BUFFER_HEXDUMP, so we'll print it manually
     for (int i = 0; i < bytesRead; i++) {
-      if (responseData[i] < 0x10) Serial.print("0");
+      if (responseData[i] < 0x10)
+        Serial.print("0");
       Serial.print(responseData[i], HEX);
       Serial.print(" ");
     }
@@ -43,7 +155,7 @@ void get_combined_data(HardwareSerial& uart_port, const uint8_t *command, size_t
 }
 
 namespace led {
-void read_confirmation(HardwareSerial& uart_port) {
+void read_confirmation(HardwareSerial &uart_port) {
   const int responseLength = 2;
   uint8_t responseData[responseLength];
   int bytesRead = uart_port.readBytes(responseData, responseLength);
@@ -54,7 +166,8 @@ void read_confirmation(HardwareSerial& uart_port) {
     } else {
       Serial.println("Received unexpected response for confirmation.");
       for (int i = 0; i < bytesRead; i++) {
-        if (responseData[i] < 0x10) Serial.print("0");
+        if (responseData[i] < 0x10)
+          Serial.print("0");
         Serial.print(responseData[i], HEX);
         Serial.print(" ");
       }
@@ -65,7 +178,7 @@ void read_confirmation(HardwareSerial& uart_port) {
   }
 }
 
-void read_status_response(HardwareSerial& uart_port) {
+void read_status_response(HardwareSerial &uart_port) {
   const int responseLength = 9;
   uint8_t responseData[responseLength];
   int bytesRead = uart_port.readBytes(responseData, responseLength);
@@ -73,7 +186,8 @@ void read_status_response(HardwareSerial& uart_port) {
   if (bytesRead == responseLength) {
     Serial.println("Received Status Response:");
     for (int i = 0; i < bytesRead; i++) {
-      if (responseData[i] < 0x10) Serial.print("0");
+      if (responseData[i] < 0x10)
+        Serial.print("0");
       Serial.print(responseData[i], HEX);
       Serial.print(" ");
     }
@@ -91,21 +205,21 @@ void read_status_response(HardwareSerial& uart_port) {
   }
 }
 
-void get_led_status(HardwareSerial& uart_port) {
+void get_led_status(HardwareSerial &uart_port) {
   Serial.println("SEND_CMD: CHECK LED STATUS.");
   uart_port.write(CMD_GET_LED_STATUS, sizeof(CMD_GET_LED_STATUS));
   read_status_response(uart_port);
   delay(100);
 }
 
-void turn_off_led(HardwareSerial& uart_port) {
+void turn_off_led(HardwareSerial &uart_port) {
   Serial.println("SEND_CMD: TURN OFF LED.");
   uart_port.write(CMD_TURN_OFF_LED, sizeof(CMD_TURN_OFF_LED));
   read_confirmation(uart_port);
   delay(100);
 }
 
-void turn_on_led(HardwareSerial& uart_port) {
+void turn_on_led(HardwareSerial &uart_port) {
   Serial.println("SEND_CMD: TURN ON LED.");
   uart_port.write(CMD_TURN_ON_LED, sizeof(CMD_TURN_ON_LED));
   read_confirmation(uart_port);
@@ -113,7 +227,7 @@ void turn_on_led(HardwareSerial& uart_port) {
 }
 } // namespace led
 
-void set_passive_mode(HardwareSerial& uart_port) {
+void set_passive_mode(HardwareSerial &uart_port) {
   Serial.println("SEND_CMD: Switching Passive Mode or QnA.");
   uart_port.write(CMDSET_MODE_PASSIVE_UPLOAD, sizeof(CMDSET_MODE_PASSIVE_UPLOAD));
   delay(100);

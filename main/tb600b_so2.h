@@ -1,15 +1,15 @@
 #ifndef TB600B_SO2_H
 #define TB600B_SO2_H
 
+#include "HardwareSerial.h"
 #include "driver/uart.h"
 #include "esp_log.h"
 #include "esp_log_buffer.h"
 #include "uart_user_config.h"
-#include "HardwareSerial.h"
 
-static const char *TAG_UART_SENSOR = "[UART_SENSOR]"; // Tag for ESP_LOG
-static const char *TAG_START = "[START]";
-static const char *TAG_TASK_TBxSO2 = "[TASK_TBxS02]";
+// static const char *TAG_UART_SENSOR = "[UART_SENSOR]"; // Tag for ESP_LOG
+// static const char *TAG_START = "[START]";
+// static const char *TAG_TASK_TBxSO2 = "[TASK_TBxS02]";
 
 /* --- SO2 GAS SENSOR TYPE: 0x24--- */
 /* --- USED COMMANDS ---- */
@@ -37,41 +37,57 @@ static const uint8_t CMDSET_MODE_PASSIVE_UPLOAD[] = {0xFF, 0x01, 0x78, 0x41, 0x0
 /* --- COMMANDS: MODE SWITCHING ---- */
 // ✅ Command 1: Switches to active upload mode
 // Return: ❌
-static const uint8_t CMDSET_MODE_ACTIVE_UPLOAD[] = {0xFF, 0x01, 0x78, 0x40, 0x00, 0x00, 0x00, 0x00, 0x47};
+// static const uint8_t CMDSET_MODE_ACTIVE_UPLOAD[] = {0xFF, 0x01, 0x78, 0x40, 0x00, 0x00, 0x00, 0x00, 0x47};
 
 /* --- COMMAND: DATA QUERY MODE --- */
 // Command 3: to get sensor type, max range, and unit: 0xD1
 // Return: 9 bytes
-static const uint8_t CMD_GET_SENSOR_INFO[] = {0xFF, 0x01, 0xD1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x35};
+// static const uint8_t CMD_GET_SENSOR_INFO[] = {0xFF, 0x01, 0xD1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x35};
 
 // Command 4: to get sensor type, max range, unit, and decimal places: [1]=0xD7
 // Return: 9 bytes
-static const uint8_t CMD_GET_SENSOR_INFO_2[] = {0xFF, 0xD7, 0x24, 0x00, 0xC8, 0x02, 0x01, 0x00, 0x3A};
+// static const uint8_t CMD_GET_SENSOR_INFO_2[] = {0xFF, 0xD7, 0x24, 0x00, 0xC8, 0x02, 0x01, 0x00, 0x3A};
 
 // Command 9: to get current version number (ASSUMTION) the return are 5 bytes
 // Return: 6 bytes
-static const uint8_t CMD_GET_VERSION[] = {0xFF, 0x01, 0x19, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+// static const uint8_t CMD_GET_VERSION[] = {0xFF, 0x01, 0x19, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 /* --- COMMAND: ACTIVE UPLOAD MODE --- */
 // ✅ Command 5: ACTIVE read gas concentration: [1]=0x01 [2]=0x86
 // Return: 9 bytes
-static const uint8_t CMD_GET_GAS_CONCENTRATION[] = {0xFF, 0x01, 0x86, 0x00, 0x00, 0x00, 0x00, 0x00, 0x79};
+// static const uint8_t CMD_GET_GAS_CONCENTRATION[] = {0xFF, 0x01, 0x86, 0x00, 0x00, 0x00, 0x00, 0x00, 0x79};
 
 /* --- H2S GAS SENSOR TYPE: 0x1C--- */
 // Command 4: to get sensor type, max range, unit, and decimal places: [1]=0xD7
 // Return: 9 bytes
-static const uint8_t h2s_commandGetSensorInfo2[] = {0xFF, 0xD7, 0x1C, 0x00, 0xC8, 0x02, 0x01, 0x00, 0x3A};
+// static const uint8_t h2s_commandGetSensorInfo2[] = {0xFF, 0xD7, 0x1C, 0x00, 0xC8, 0x02, 0x01, 0x00, 0x3A};
 
 namespace tb600b {
-void read_confirmation(HardwareSerial& uart_port);
-void read_status_response(HardwareSerial& uart_port);
-void get_combined_data(HardwareSerial& uart_port, const uint8_t *command, size_t commandSize);
-void set_passive_mode(HardwareSerial& uart_port);
+
+// SO2 Sensor Data
+extern float so2_currentTemperature;
+extern float so2_currentHumidity;
+extern float so2_currentGasUg;
+extern bool so2_isDataAvailable;
+
+// H2S Sensor Data
+extern float h2s_currentTemperature;
+extern float h2s_currentHumidity;
+extern float h2s_currentGasUg;
+extern bool h2s_isDataAvailable;
+
+void get_so2_data(HardwareSerial &uart_port, const uint8_t *command, size_t commandSize);
+void get_h2s_data(HardwareSerial &uart_port, const uint8_t *command, size_t commandSize);
+
+void read_confirmation(HardwareSerial &uart_port);
+void read_status_response(HardwareSerial &uart_port);
+void get_combined_data(HardwareSerial &uart_port, const uint8_t *command, size_t commandSize);
+void set_passive_mode(HardwareSerial &uart_port);
 
 namespace led {
-void get_led_status(HardwareSerial& uart_port);
-void turn_off_led(HardwareSerial& uart_port);
-void turn_on_led(HardwareSerial& uart_port);
+void get_led_status(HardwareSerial &uart_port);
+void turn_off_led(HardwareSerial &uart_port);
+void turn_on_led(HardwareSerial &uart_port);
 } // namespace led
 
 } // namespace tb600b

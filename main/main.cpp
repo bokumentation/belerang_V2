@@ -1,11 +1,6 @@
 #include "Arduino.h"
 #include <stdio.h>
 
-// Wifi Library
-#include "WiFi.h"     // Unused
-#include "esp_now.h"  // Unused
-#include "esp_wifi.h" // Unused
-
 // User include library
 #include "anemometer.h"
 #include "tb600b_so2.h"
@@ -13,7 +8,7 @@
 
 // User variable
 
-const static char *pTAG_MAIN = "MAIN";
+// const static char *pTAG_MAIN = "MAIN";
 
 // Instantiate the HardwareSerial objects
 HardwareSerial SO2_Serial(SO2_UART_PORT);
@@ -24,10 +19,6 @@ void setup() {
   while (!Serial) {
     ; // wait for serial port to connect
   }
-  WiFi.mode(WIFI_STA);
-  String macAddress = WiFi.macAddress();
-  Serial.print("MAC Address: ");
-  Serial.println(macAddress);
 
   // Initialize UART1 for SO2 sensor
   SO2_Serial.begin(UART_BAUD_RATE, SERIAL_8N1, SO2_UART_RX_PIN, SO2_UART_TX_PIN);
@@ -56,15 +47,31 @@ void loop() {
   Serial.print(" km/h");
   Serial.println(" ");
 
-  // Get combined data from the UART sensor
+  // Get combined data from the SO2 sensor
   ESP_LOGI("SO2", "GET DATA");
+  tb600b::get_so2_data(SO2_Serial, CMD_GET_COMBINED_DATA, sizeof(CMD_GET_COMBINED_DATA));
 
-  // Need to work for get global varible and not to print here.
-  tb600b::get_combined_data(SO2_Serial, CMD_GET_COMBINED_DATA, sizeof(CMD_GET_COMBINED_DATA));
+  if (tb600b::so2_isDataAvailable) {
+    Serial.println("SO2 Sensor Data:");
+    Serial.printf("  Temperature: %.2f °C\n", tb600b::so2_currentTemperature);
+    Serial.printf("  Humidity: %.2f %%\n", tb600b::so2_currentHumidity);
+    Serial.printf("  Gas Concentration: %.2f ug/m^3\n", tb600b::so2_currentGasUg);
+  } else {
+    Serial.println("SO2 sensor data not available.");
+  }
 
-  // Need to work for get global varible and not to print here.
+  // Get combined data from the H2S sensor
   ESP_LOGI("H2S", "GET DATA");
-  tb600b::get_combined_data(H2S_Serial, CMD_GET_COMBINED_DATA, sizeof(CMD_GET_COMBINED_DATA));
+  tb600b::get_h2s_data(H2S_Serial, CMD_GET_COMBINED_DATA, sizeof(CMD_GET_COMBINED_DATA));
+
+  if (tb600b::h2s_isDataAvailable) {
+    Serial.println("H2S Sensor Data:");
+    Serial.printf("  Temperature: %.2f °C\n", tb600b::h2s_currentTemperature);
+    Serial.printf("  Humidity: %.2f %%\n", tb600b::h2s_currentHumidity);
+    Serial.printf("  Gas Concentration: %.2f ug/m^3\n", tb600b::h2s_currentGasUg);
+  } else {
+    Serial.println("H2S sensor data not available.");
+  }
 
   delay(5000);
 }
