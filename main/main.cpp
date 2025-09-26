@@ -1,14 +1,9 @@
 #include "Arduino.h"
-#include <stdio.h>
 
 // User include library
 #include "anemometer.h"
 #include "tb600b_so2.h"
 #include "uart_user_config.h"
-
-// User variable
-
-// const static char *pTAG_MAIN = "MAIN";
 
 // Instantiate the HardwareSerial objects
 HardwareSerial SO2_Serial(SO2_UART_PORT);
@@ -38,8 +33,6 @@ void setup() {
 void loop() {
   anemometer_loop();
   float wind_speed = getAnemometerSpeed_kmph();
-  // ESP_LOGI(pTAG_MAIN, "Current wind speed: %.2f km/h", wind_speed);
-
   ESP_LOGI("MAIN LOOP", "--------------------------------------");
   ESP_LOGI("ANEMOMETER", "GET WIND SPEED");
   Serial.println("Wind Speed Response: ");

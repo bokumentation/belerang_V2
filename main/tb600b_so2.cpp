@@ -232,4 +232,5 @@ void set_passive_mode(HardwareSerial &uart_port) {
   uart_port.write(CMDSET_MODE_PASSIVE_UPLOAD, sizeof(CMDSET_MODE_PASSIVE_UPLOAD));
   delay(100);
 }
+
 } // namespace tb600b
